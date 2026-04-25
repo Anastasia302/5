@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life App</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #05070d;
+  color: white;
+}
+
+/* BACKGROUND */
+body::before {
+  content:"";
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(30,144,255,0.18), transparent 50%),
+    radial-gradient(circle at 80% 10%, rgba(0,200,255,0.12), transparent 50%);
+  z-index:-1;
+}
+
+/* HEADER */
+.header {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  position:relative;
+  padding:16px;
+}
+
+.plus {
+  position:absolute;
+  right:16px;
+  width:38px;
+  height:38px;
+  border-radius:14px;
+  background:rgba(255,255,255,0.06);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  backdrop-filter:blur(20px);
+  cursor:pointer;
+}
+
+/* WEEK */
+.week {
+  display:flex;
+  justify-content:space-between;
+  padding:0 12px;
+}
+
+.day {
+  flex:1;
+  margin:2px;
+  padding:8px 0;
+  text-align:center;
+  border-radius:12px;
+  font-size:12px;
+  background:rgba(255,255,255,0.03);
+}
+
+.day.active {
+  background:linear-gradient(135deg,#1e90ff,#4fc3ff);
+  box-shadow:0 0 12px #1e90ff;
+}
+
+.day span {
+  display:block;
+  font-size:9px;
+  opacity:0.5;
+}
+
+/* SCREENS */
+.screen { display:none; }
+.screen.active { display:block; }
+
+/* CARD */
+.card {
+  margin:12px;
+  border-radius:20px;
+  background:rgba(255,255,255,0.05);
+  backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,0.08);
+}
+
+.card-header {
+  padding:14px;
+  text-align:center;
+}
+
+/* ITEM */
+.item {
+  display:flex;
+  justify-content:space-between;
+  padding:12px;
+  border-radius:14px;
+  background:rgba(255,255,255,0.03);
+  margin-bottom:8px;
+}
+
+/* EVENT */
+.event {
+  display:flex;
+  gap:12px;
+  padding:12px;
+  border-radius:14px;
+  background:rgba(255,255,255,0.03);
+  margin-bottom:8px;
+}
+
+.time {
+  font-size:12px;
+  opacity:0.6;
+}
+
+/* CIRCLE */
+.circle {
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,0.3);
+}
+
+.circle.active {
+  background:#1e90ff;
+  box-shadow:0 0 10px #1e90ff;
+}
+
+/* MODAL */
+.modal {
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.6);
+  display:none;
+  align-items:flex-end;
+}
+
+.modal-box {
+  width:100%;
+  background:#0b1020;
+  border-radius:20px 20px 0 0;
+  padding:16px;
+}
+
+select,input {
+  width:100%;
+  margin-bottom:10px;
+  padding:12px;
+  border-radius:12px;
+  border:none;
+  background:rgba(255,255,255,0.06);
+  color:white;
+}
+
+button {
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:12px;
+  background:#1e90ff;
+  color:white;
+}
+
+/* NAV DOTS */
+.nav {
+  position:fixed;
+  bottom:12px;
+  left:50%;
+  transform:translateX(-50%);
+  width:90%;
+  display:flex;
+  justify-content:space-around;
+  padding:12px;
+  background:rgba(255,255,255,0.05);
+  backdrop-filter:blur(20px);
+  border-radius:18px;
+}
+
+.dot {
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:#445;
+}
+
+.dot.active {
+  background:#1e90ff;
+  box-shadow:0 0 10px #1e90ff;
+  transform:scale(1.3);
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  Планер
+  <div class="plus" onclick="openModal()">＋</div>
+</div>
+
+<div class="week" id="week"></div>
+
+<!-- SCREENS -->
+<div id="screen0" class="screen active">
+  <div class="card">
+    <div class="card-header">События</div>
+    <div id="events"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">Расписание</div>
+    <div id="schedule"></div>
+  </div>
+</div>
+
+<div id="screen1" class="screen">
+  <div class="card"><div class="card-header">Здоровье</div></div>
+</div>
+
+<div id="screen2" class="screen">
+  <div class="card"><div class="card-header">Финансы</div></div>
+</div>
+
+<div id="screen3" class="screen">
+  <div class="card"><div class="card-header">Статистика</div></div>
+</div>
+
+<div id="screen4" class="screen">
+  <div class="card"><div class="card-header">Настройки</div></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <select id="type">
+      <option value="event">Событие</option>
+      <option value="habit">Привычка</option>
+      <option value="quest">Квест</option>
+      <option value="schedule">Расписание</option>
+    </select>
+
+    <select id="day">
+      <option value="1">Пн</option>
+      <option value="2">Вт</option>
+      <option value="3">Ср</option>
+      <option value="4">Чт</option>
+      <option value="5">Пт</option>
+      <option value="6">Сб</option>
+      <option value="0">Вс</option>
+    </select>
+
+    <input id="time" type="time">
+    <input id="text" type="text" placeholder="Название">
+
+    <button onclick="save()">Сохранить</button>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <div class="dot active" onclick="switchScreen(0)"></div>
+  <div class="dot" onclick="switchScreen(1)"></div>
+  <div class="dot" onclick="switchScreen(2)"></div>
+  <div class="dot" onclick="switchScreen(3)"></div>
+  <div class="dot" onclick="switchScreen(4)"></div>
+</div>
+
+<script>
+
+let data=[];
+
+function openModal(){
+  modal.style.display="flex";
+}
+
+function save(){
+  data.push({
+    type:type.value,
+    day:day.value,
+    time:time.value,
+    text:text.value
+  });
+
+  modal.style.display="none";
+  render();
+}
+
+function render(){
+  events.innerHTML="";
+  schedule.innerHTML="";
+
+  data.forEach(i=>{
+    let el=`<div class="item">${i.time} ${i.text}</div>`;
+
+    if(i.type==="event") events.innerHTML+=el;
+    if(i.type==="schedule") schedule.innerHTML+=el;
+  });
+}
+
+/* WEEK */
+function renderWeek(){
+  const week=document.getElementById("week");
+  const days=["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
+
+  days.forEach((d,i)=>{
+    let el=document.createElement("div");
+    el.className="day";
+    el.innerHTML=`<span>${d}</span>${i+1}`;
+    week.appendChild(el);
+  });
+}
+
+/* NAV */
+function switchScreen(n){
+  for(let i=0;i<5;i++){
+    document.getElementById("screen"+i).classList.remove("active");
+    document.querySelectorAll(".dot")[i].classList.remove("active");
+  }
+  document.getElementById("screen"+n).classList.add("active");
+  document.querySelectorAll(".dot")[n].classList.add("active");
+}
+
+renderWeek();
+render();
+
+</script>
+
+</body>
+</html>
